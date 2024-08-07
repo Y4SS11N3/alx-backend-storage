@@ -1,14 +1,13 @@
--- Drop existing SafeDiv function if it exists
+-- SafeDiv: Safely divides two integers, returning 0 if the divisor is 0
 DROP FUNCTION IF EXISTS SafeDiv;
 DELIMITER $$
-CREATE FUNCTION SafeDiv (a INT, b INT)
-RETURNS FLOAT DETERMINISTIC
+CREATE FUNCTION SafeDiv(a INT, b INT)
+RETURNS FLOAT
+DETERMINISTIC
 BEGIN
-    DECLARE result FLOAT DEFAULT 0;
-
-    IF b != 0 THEN
-        SET result = a / b;
-    END IF;
-    RETURN result;
-END $$
+    RETURN CASE
+        WHEN b = 0 THEN 0
+        ELSE a * 1.0 / b
+    END;
+END$$
 DELIMITER ;

@@ -1,16 +1,14 @@
 -- Drop existing SafeDiv function if it exists
 DROP FUNCTION IF EXISTS SafeDiv;
-
-DELIMITER //
-
-CREATE FUNCTION SafeDiv(a INT, b INT)
-RETURNS DECIMAL(10,6) DETERMINISTIC
+DELIMITER $$
+CREATE FUNCTION SafeDiv (a INT, b INT)
+RETURNS FLOAT DETERMINISTIC
 BEGIN
-    IF b = 0 THEN
-        RETURN 0;
-    ELSE
-        RETURN a / b;
-    END IF;
-END //
+    DECLARE result FLOAT DEFAULT 0;
 
+    IF b != 0 THEN
+        SET result = a / b;
+    END IF;
+    RETURN result;
+END $$
 DELIMITER ;

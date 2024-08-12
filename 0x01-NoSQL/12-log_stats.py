@@ -1,39 +1,32 @@
 #!/usr/bin/env python3
-"""Module for analyzing Nginx log data stored in MongoDB"""
-
+"""Module for analyzing Nginx log data in MongoDB"""
 from pymongo import MongoClient
 
 
-def analyze_nginx_logs():
-    """Analyze and display statistics about Nginx logs from MongoDB"""
-    db_client = MongoClient('mongodb://127.0.0.1:27017')
-    log_collection = db_client.logs.nginx
-
-    http_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    
+def analyze_nginx_logs(log_collection):
+    """Display statistics about Nginx request logs"""
     total_logs = log_collection.count_documents({})
-    print(f"{total_logs} logs")
-    
-    print("Methods:")
-    for http_method in http_methods:
-        method_count = log_collection.count_documents({"method": http_method})
-        print(f"\tmethod {http_method}: {method_count}")
-    
-    status_checks = log_collection.count_documents(
-        {"method": "GET", "path": "/status"}
-    )
-    print(f"{status_checks} status check")
-    
-    top_ips = log_collection.aggregate([
-        {"$group": {"_id": "$ip", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
-    ])
-    
-    print("IPs:")
-    for ip_data in top_ips:
-        print(f"\t{ip_data.get('_id')}: {ip_data.get('count')}")
+    print(f"Total logs: {total_logs}")
+
+    http_methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    print("HTTP Methods:")
+    for method in http_methods:
+        method_count = log_collection.count_documents({"method": method})
+        print(f"    {method}: {method_count}")
+
+    status_checks = log_collection.count_documents({
+        "method": "GET",
+        "path": "/status"
+    })
+    print(f"Status checks: {status_checks}")
 
 
-if __name__ == "__main__":
-    analyze_nginx_logs()
+def main():
+    """Entry point: Connect to MongoDB and analyze Nginx logs"""
+    db_client = MongoClient('mongodb://127.0.0.1:27017')
+    nginx_logs = db_client.logs.nginx
+    analyze_nginx_logs(nginx_logs)
+
+
+if __name__ == '__main__':
+    main()

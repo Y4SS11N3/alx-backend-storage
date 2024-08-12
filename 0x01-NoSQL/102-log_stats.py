@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
-"""
-Improved Python script that provides stats about Nginx logs stored in MongoDB
-"""
-
+"""Module for Nginx log analysis in MongoDB"""
 from pymongo import MongoClient
 
 
-def log_stats(mongo_collection):
-    """
-    Provides stats about Nginx logs stored in MongoDB
-    """
-    total_logs = mongo_collection.count_documents({})
+def analyze_nginx_logs():
+    """Analyze and display stats about Nginx logs stored in MongoDB"""
+    client = MongoClient('mongodb://127.0.0.1:27017')
+    nginx_collection = client.logs.nginx
+
+    total_logs = nginx_collection.count_documents({})
     print(f"{total_logs} logs")
 
     print("Methods:")
-    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    for method in methods:
-        count = mongo_collection.count_documents({"method": method})
-        print(f"    method {method}: {count}")
+    http_methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    for method in http_methods:
+        method_count = nginx_collection.count_documents({"method": method})
+        print(f"\tmethod {method}: {method_count}")
 
-    status_check = mongo_collection.count_documents(
+    status_checks = nginx_collection.count_documents(
         {"method": "GET", "path": "/status"}
     )
-    print(f"{status_check} status check")
+    print(f"{status_checks} status check")
 
     print("IPs:")
     pipeline = [
@@ -30,12 +28,10 @@ def log_stats(mongo_collection):
         {"$sort": {"count": -1}},
         {"$limit": 10}
     ]
-    top_ips = mongo_collection.aggregate(pipeline)
+    top_ips = nginx_collection.aggregate(pipeline)
     for ip in top_ips:
-        print(f"    {ip['_id']}: {ip['count']}")
+        print(f"\t{ip['_id']}: {ip['count']}")
 
 
 if __name__ == "__main__":
-    client = MongoClient('mongodb://127.0.0.1:27017')
-    logs_collection = client.logs.nginx
-    log_stats(logs_collection)
+    analyze_nginx_logs()

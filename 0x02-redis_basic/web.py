@@ -2,11 +2,11 @@
 """
 Web cache and tracker module.
 """
+
 import redis
 import requests
 from functools import wraps
 from typing import Callable
-
 
 redis_client = redis.Redis()
 """The module-level Redis instance."""
@@ -32,21 +32,16 @@ def cache_and_track(expiration_time: int = 10) -> Callable:
             """
             count_key = f'count:{url}'
             result_key = f'result:{url}'
-
             # Increment the access count
             redis_client.incr(count_key)
-
             # Try to get the cached result
             result = redis_client.get(result_key)
             if result:
                 return result.decode('utf-8')
-
             # If not in cache, fetch the page
             result = method(url)
-
             # Cache the result with expiration
             redis_client.setex(result_key, expiration_time, result)
-
             return result
         return wrapper
     return decorator
@@ -65,7 +60,10 @@ def get_page(url: str) -> str:
 
 
 if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/delay/1000/url/http://www.example.com"
+    url = (
+        "http://slowwly.robertomurray.co.uk/delay/1000/"
+        "url/http://www.example.com"
+    )
     print(get_page(url))
     print(get_page(url))
     print(get_page(url))

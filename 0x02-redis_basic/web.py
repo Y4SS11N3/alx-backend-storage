@@ -49,14 +49,3 @@ def get_page(url: str) -> str:
         str: The HTML content of the URL.
     """
     return requests.get(url).text
-
-
-if __name__ == "__main__":
-    base_url = "http://slowwly.robertomurray.co.uk"
-    url = f"{base_url}/delay/1000/url/http://www.example.com"
-    print("First call (not cached):")
-    print(get_page(url)[:100])
-    print("\nSecond call (should be cached):")
-    print(get_page(url)[:100])
-    count = redis_client.get(f'count:{url}').decode('utf-8')
-    print(f"\nAccess count: {count}")

@@ -74,29 +74,30 @@ def replay(method: Callable) -> None:
     Args:
         method (Callable): The method to replay.
     """
+    if method is None or not hasattr(method, '__self__'):
+        return
+
+    redis_store = getattr(method.__self__, '_redis', None)
+    if not isinstance(redis_store, redis.Redis):
+        return
+
     method_name = method.__qualname__
     inputs_key = f"{method_name}:inputs"
     outputs_key = f"{method_name}:outputs"
 
-    redis_instance = method.__self__._redis
-    call_count = redis_instance.get(method_name)
-    try:
-        call_count = int(call_count.decode('utf-8'))
-    except (AttributeError, ValueError):
-        call_count = 0
+    call_count = 0
+    if redis_store.exists(method_name) != 0:
+        call_count = int(redis_store.get(method_name))
 
     print(f"{method_name} was called {call_count} times:")
 
-    inputs = redis_instance.lrange(inputs_key, 0, -1)
-    outputs = redis_instance.lrange(outputs_key, 0, -1)
+    inputs = redis_store.lrange(inputs_key, 0, -1)
+    outputs = redis_store.lrange(outputs_key, 0, -1)
 
-    for input_data, output_data in zip(inputs, outputs):
-        try:
-            input_str = input_data.decode('utf-8').strip("()")
-            output_str = output_data.decode('utf-8')
-            print(f"{method_name}(*{input_str}) -> {output_str}")
-        except Exception as e:
-            print(f"Error decoding data: {e}")
+    for input_args, output in zip(inputs, outputs):
+        input_str = input_args.decode("utf-8")
+        output_str = output.decode("utf-8")
+        print(f"{method_name}(*{input_str}) -> {output_str}")
 
 
 class Cache:
